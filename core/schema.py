@@ -2,28 +2,18 @@ from cmath import log
 from typing_extensions import Required
 import graphene
 import requests
-from django.forms import ModelForm
 from graphene_django import DjangoObjectType
 from graphene_django.forms.mutation import DjangoModelFormMutation
 from core.models import MNFT, User
+from graphql.types import UserGraphQLType, MNFTCollectionGraphQLType, MNFTGraphQLType, BlockchainGraphQLType
 
-
-# graphene type
-class UserType(DjangoObjectType):
-    class Meta:
-        model = User
-
-
-class MNFTType(DjangoObjectType):
-    class Meta:
-        model = MNFT
 
 
 class Query(graphene.ObjectType):
-    getAllMNFT = graphene.List(MNFTType)
-    getMNFT = graphene.Field(MNFTType, address=graphene.String())
-    getAllUser = graphene.List(UserType)
-    getUser = graphene.Field(UserType, address=graphene.String())
+    getAllMNFT = graphene.List(MNFTGraphQLType)
+    getMNFT = graphene.Field(MNFTGraphQLType, address=graphene.String())
+    getAllUser = graphene.List(UserGraphQLType)
+    getUser = graphene.Field(UserGraphQLType, address=graphene.String())
 
     def resolve_getAllMNFT(root, info):
         return MNFT.objects.all()
@@ -82,7 +72,7 @@ class createMNFT(graphene.Mutation):
         # address = graphene.String(required=True)
         input = MNFTInput()
     ok = graphene.Boolean()
-    MNFT = graphene.Field(MNFTType)
+    MNFT = graphene.Field(MNFTGraphQLType)
 
     @staticmethod
     def mutate(root, info, input=None):
@@ -124,7 +114,7 @@ class updateMNFT(graphene.Mutation):
         address = graphene.String(required=True)
         input = MNFTInput()
     ok = graphene.Boolean()
-    MNFT = graphene.Field(MNFTType)
+    MNFT = graphene.Field(MNFTGraphQLType)
 
     @staticmethod
     def mutate(root, info, address, input=None):
@@ -165,7 +155,7 @@ class createUser(graphene.Mutation):
     class Arguments:
         input = UserInput()
     ok = graphene.Boolean()
-    user = graphene.Field(UserType)
+    user = graphene.Field(UserGraphQLType)
 
     @ staticmethod
     def mutate(root, info, input=None):
@@ -183,7 +173,7 @@ class updateUser(graphene.Mutation):
         address = graphene.String(required=True)
         input = UserInput()
     ok = graphene.Boolean()
-    user = graphene.Field(UserType)
+    user = graphene.Field(UserGraphQLType)
 
     @staticmethod
     def mutate(root, info, address, input=None):
@@ -203,7 +193,7 @@ class createOrUpdateUser(graphene.Mutation):
     class Arguments:
         input = UserInput()
     ok = graphene.Boolean()
-    user = graphene.Field(UserType)
+    user = graphene.Field(UserGraphQLType)
 
     @ staticmethod
     def mutate(root, info, input=None):
