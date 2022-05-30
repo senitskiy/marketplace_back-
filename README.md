@@ -29,3 +29,6 @@ DJANGO_SUPERUSER_PASSWORD=password
 ```
 docker-compose -f docker-compose.yml up -d --build
 ```
+После успешного запуска, сервер будет доступен по адресам:
+http://localhost:8000/admin/ - админка, для упрощения работы с тестовыми данными
+http://localhost:8000/graphql/ - оболочка для запросов GraphQL
