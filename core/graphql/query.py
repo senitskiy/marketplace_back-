@@ -31,14 +31,14 @@ def _resolve_object_by_name_id(cls, name, chainId) -> QuerySet | None:
 
 
 class Query(graphene.ObjectType):
-    getUsers = graphene.List(UserGraphQLType)
-    getMNFTCollections = graphene.List(MNFTCollectionGraphQLType)
-    getMNFTs = graphene.List(MNFTGraphQLType)
-    getBlockchains = graphene.List(BlockchainGraphQLType)
-    getUser = graphene.Field(UserGraphQLType, address=graphene.String())
-    getMNFTCollection = graphene.Field(MNFTCollectionGraphQLType, address=graphene.String())
-    getMNFT = graphene.Field(MNFTGraphQLType, address=graphene.String())
-    getBlockchain = graphene.Field(BlockchainGraphQLType, name=graphene.String(), idChain=graphene.Int())
+    getUsers = graphene.List(UserGraphQLType, description='Получить список пользователей')
+    getMNFTCollections = graphene.List(MNFTCollectionGraphQLType, description='Получить список коллекций')
+    getMNFTs = graphene.List(MNFTGraphQLType, description='Получить список MNFT')
+    getBlockchains = graphene.List(BlockchainGraphQLType, description='Получить список блокчейнов')
+    getUser = graphene.Field(UserGraphQLType, address=graphene.String(), description='Получить данные пользователя')
+    getMNFTCollection = graphene.Field(MNFTCollectionGraphQLType, address=graphene.String(), description='Получить данные коллекции')
+    getMNFT = graphene.Field(MNFTGraphQLType, address=graphene.String(), description='Получить данные о MNFT')
+    getBlockchain = graphene.Field(BlockchainGraphQLType, name=graphene.String(), idChain=graphene.Int(), description='Получить данные о блокчейне')
 
     def resolve_getUsers(root, info) -> QuerySet:
         return _resolve_objects(User)

@@ -17,8 +17,12 @@ class MNFTGraphQLType(DjangoObjectType):
     priceAd = graphene.Float(description='Рекомендуемая цена аренды')
     startRent = graphene.DateTime(description='Время старта аренды MNFT для рекламы')
     endRent = graphene.DateTime(description='Время окончания аренды MNFT для рекламы')
-    OriginCID = graphene.String(description='CID оригинального изображения')
-    AdvCID = graphene.String(description='CID оригинального изображения с рекламной вставкой')
+    originCID = graphene.String(description='CID оригинального изображения')
+    advCID = graphene.String(description='CID оригинального изображения с рекламной вставкой')
+    currentCID = graphene.String(description='Текущее состояние MNFT')
+
+    def resolve_currentCID(self, info):
+        return self.get_image()
 
     class Meta:
         model = MNFT

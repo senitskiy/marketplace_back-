@@ -1,6 +1,6 @@
 from pydoc import describe
 from django.db import models
-
+from time import time
 
 class Web3Model(models.Model):
     ''' Абстрактная модель для всех сущностей web3.0 
@@ -103,8 +103,8 @@ class MNFT(Web3Model):
     priceAd = models.FloatField(default=0.0)
     startRent = models.DateTimeField(null=True, blank=True)
     endRent = models.DateTimeField(null=True, blank=True)
-    OriginCID = models.CharField(max_length=300)
-    AdvCID = models.CharField(max_length=300, null=True, blank=True)
+    originCID = models.CharField(max_length=300)
+    advCID = models.CharField(max_length=300, null=True, blank=True)
 
     def save(self, *args, **kwargs) -> None:
         if not self.ownerAddress:
@@ -112,5 +112,11 @@ class MNFT(Web3Model):
         super().save(*args, **kwargs)
 
     def get_image(self):
-        pass
+        now = time()
+        if self.startRent is None or self.endRent is None:
+            return self.originCID
+        if now < self.endRent.timestamp() and now > self.startRent.timestamp():
+            return self.advCID
+        else:
+            return self.originCID
 
