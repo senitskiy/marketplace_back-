@@ -1,150 +1,208 @@
 import graphene
-from core.graphql.inputs import MNFTCollectionInput, MNFTInput, UserInput, BlockchainInput
 from core.graphql.types import MNFTCollectionGraphQLType, MNFTGraphQLType, UserGraphQLType, BlockchainGraphQLType
+from core.graphql.inputs import MNFTCollectionInput, MNFTInput, UserInput, BlockchainInput
 from core.models import MNFTCollection, MNFT, User, Blockchain
 
-class createMNFT(graphene.Mutation):
+
+class CreateUser(graphene.Mutation):
     class Arguments:
-        # address = graphene.String(required=True)
-        input = MNFTInput()
-    ok = graphene.Boolean()
-    MNFT = graphene.Field(MNFTGraphQLType)
+        user = UserInput(required=True)
+    
+    class Meta:
+        description = 'Создает пользователя'
+    
+    user = graphene.Field(UserGraphQLType, description='Данные о пользователе')
+    isCreated = graphene.Boolean(description='Равен истина если пользователь был создан, иначе ложь')
 
-    @staticmethod
-    def mutate(root, info, input=None):
-        ok = True
-        print(input.sponsor)
-        uCreator = User.objects.get(pk=input.creator)
-        uOwner = User.objects.get(pk=input.owner)
-        uSponsor = User.objects.get(
-            pk=input.sponsor) if input.sponsor is not None else None
-        print(uCreator, uOwner, uSponsor)
-
-        mnft_instanse = MNFT(address=input.address,
-                             blockchain=input.blockchain,
-                             symbol=input.symbol,
-                             standart=input.standart,
-                             lastUpdate=input.lastUpdate,
-                             name=input.name,
-                             description=input.description,
-                             image=input.image,
-                             cost=input.cost,
-                             costAd=input.costAd,
-                             creator=uCreator,
-                             owner=uOwner,
-                             sponsor=uSponsor
-                             )
-        mnft_instanse.save()
-        s = requests.Session()
-        answ = s.request(
-            "DELETE", f"https://api-staging.rarible.org/v0.1/items/ETHERIUM:{input.address}:0/resetMeta")
-        print("RESET RARRIBLE: ", answ)
-        answ = s.request(
-            "GET", f"https://api-staging.rarible.org/v0.1/items/ETHERIUM:{input.address}:0")
-        print("GETELEMENTID RARRIBLE: ", answ)
-        return createMNFT(ok=ok, MNFT=mnft_instanse)
+    @classmethod
+    def mutate(cls, root, info, user):
+        userInstance = User.objects.create(**user)
+        userInstance.save()
+        return CreateUser(user=userInstance, isCreated=True)
 
 
-class updateMNFT(graphene.Mutation):
+class CreateOrUpdateUser(graphene.Mutation):
     class Arguments:
-        address = graphene.String(required=True)
-        input = MNFTInput()
-    ok = graphene.Boolean()
-    MNFT = graphene.Field(MNFTGraphQLType)
-
-    @staticmethod
-    def mutate(root, info, address, input=None):
-        ok = False
-        uCreator = User.objects.get(pk=input.creator) if input.creator is not None else None
-        uOwner = User.objects.get(pk=input.owner) if input.owner is not None else None
-        uSponsor = User.objects.get(pk=input.sponsor) if input.sponsor is not None else None
-        mnft_instance = MNFT.objects.get(pk=address)
-        if mnft_instance:
-            ok = True
-            mnft_instance.address = input.address if input.address is not None else mnft_instance.address 
-            mnft_instance.blockchain = input.blockchain if input.blockchain is not None else mnft_instance.blockchain
-            mnft_instance.symbol = input.symbol if input.symbol is not None else mnft_instance.symbol
-            mnft_instance.standart = input.standart if input.standart is not None else mnft_instance.standart
-            mnft_instance.lastUpdate = input.lastUpdate if input.lastUpdate is not None else mnft_instance.lastUpdate
-            mnft_instance.name = input.name if input.name is not None else mnft_instance.name
-            mnft_instance.description = input.description if input.description is not None else mnft_instance.description
-            mnft_instance.image = input.image if input.image is not None else mnft_instance.image
-            mnft_instance.cost = input.cost if input.cost is not None else mnft_instance.cost
-            mnft_instance.costAd = input.costAd if input.costAd is not None else mnft_instance.costAd
-            mnft_instance.creator = uCreator if uCreator is not None else mnft_instance.creator
-            mnft_instance.owner = uOwner if uOwner is not None else mnft_instance.owner
-            mnft_instance.sponsor = uSponsor if uSponsor is not None else mnft_instance.sponsor
-            mnft_instance.save()
-            s = requests.Session()
-
-            answ = s.request(
-                "DELETE", f"https://api-staging.rarible.org/v0.1/items/ETHERIUM:{input.address}:0/resetMeta")
-            print("RESET RARRIBLE: ", answ)
-            answ = s.request(
-                "GET", f"https://api-staging.rarible.org/v0.1/items/ETHERIUM:{input.address}:0")
-            print("GETELEMENTID RARRIBLE: ", answ)
-            return updateMNFT(ok=ok, MNFT=mnft_instance)
-        return updateMNFT(ok=ok, MNFT=None)
+        user = UserInput(required=True)
+    
+    class Meta:
+        description = 'Обновляет данные о пользователе, если его нет то создает'
+    
+    user = graphene.Field(UserGraphQLType, description='Данные о пользователе')
+    isCreated = graphene.Boolean(description='Равен истина если пользователь был создан, иначе ложь')
+    
+    @classmethod
+    def mutate(cls, root, info, user):
+        (userInstance, isCreated) = User.objects.update_or_create(defaults=user, pk=user.address)
+        return CreateOrUpdateUser(user=userInstance, isCreated=isCreated)
 
 
-class createUser(graphene.Mutation):
+class DeleteUser(graphene.Mutation):
     class Arguments:
-        input = UserInput()
-    ok = graphene.Boolean()
-    user = graphene.Field(UserGraphQLType)
+        address = graphene.String(required=True, description='Адрес')
+    
+    class Meta:
+        description = 'Удаляет пользователя'
+    
+    isDeleted = graphene.Boolean(description='Результат удаления')
 
-    @ staticmethod
-    def mutate(root, info, input=None):
-        ok = True
-        user_instance = User(address=input.address,
-                             image=input.image,
-                             name=input.name,
-                             email=input.email)
-        user_instance.save()
-        return createUser(ok=ok, user=user_instance)
+    @classmethod
+    def mutate(cls, root, info, address):
+        isDeleted = (User.objects.get(pk=address).delete()) is not None
+        return DeleteUser(isDeleted=isDeleted)
 
 
-class updateUser(graphene.Mutation):
+class CreateMNFT(graphene.Mutation):
     class Arguments:
-        address = graphene.String(required=True)
-        input = UserInput()
-    ok = graphene.Boolean()
-    user = graphene.Field(UserGraphQLType)
+        mnft = MNFTInput(required=True)
+    
+    class Meta:
+        description = 'Создает MNFT'
+    
+    mnft = graphene.Field(MNFTGraphQLType, description='Данные о MNFT')
+    isCreated = graphene.Boolean(description='Равен истина если MNFT был создан, иначе ложь')
 
-    @staticmethod
-    def mutate(root, info, address, input=None):
-        ok = False
-        user_instance = User.objects.get(pk=address)
-        if user_instance:
-            ok = True
-            user_instance.image = image = input.image
-            user_instance.name = image = input.name
-            user_instance.email = image = input.email
-            user_instance.save()
-            return updateUser(ok=ok, user=user_instance)
-        return updateUser(ok=ok, user=None)
+    @classmethod
+    def mutate(cls, root, info, mnft):
+        mnftInstance = MNFT.objects.create(**mnft)
+        mnftInstance.save()
+        return CreateMNFT(mnft=mnftInstance, isCreated=True)
 
 
-class createOrUpdateUser(graphene.Mutation):
+class CreateOrUpdateMNFT(graphene.Mutation):
     class Arguments:
-        input = UserInput()
-    ok = graphene.Boolean()
-    user = graphene.Field(UserGraphQLType)
+        mnft = MNFTInput(required=True)
+    
+    class Meta:
+        description = 'Обновляет данные о MNFT, если его нет то создает'
+    
+    mnft = graphene.Field(MNFTGraphQLType, description='Данные о MNFT')
+    isCreated = graphene.Boolean(description='Равен истина если MNFT был создан, иначе ложь')
 
-    @ staticmethod
-    def mutate(root, info, input=None):
-        ok = True
-        user_instance, create = User.objects.update_or_create(address=input.address,
-                                                              image=input.image,
-                                                              name=input.name,
-                                                              email=input.email)
-        user_instance.save()
-        return createUser(ok=ok, user=user_instance)
+    @classmethod
+    def mutate(cls, root, info, mnft):
+        (mnftInstance, isCreated) = MNFT.objects.update_or_create(defaults=mnft, pk=mnft.address)
+        return CreateOrUpdateMNFT(user=mnftInstance, isCreated=isCreated)
 
+
+class DeleteMNFT(graphene.Mutation):
+    class Arguments:
+        address = graphene.String(required=True, description='Адрес')
+    
+    class Meta:
+        description = 'Удаляет MNFT'
+    
+    isDeleted = graphene.Boolean(description='Результат удаления')
+
+    @classmethod
+    def mutate(cls, root, info, address):
+        isDeleted = (MNFT.objects.get(pk=address).delete()) is not None
+        return DeleteMNFT(isDeleted=isDeleted)
+
+
+class CreateMNFTCollection(graphene.Mutation):
+    class Arguments:
+        mnftCollection = MNFTCollectionInput(required=True)
+    
+    class Meta:
+        description = 'Создает коллекцию'
+    
+    mnftCollection = graphene.Field(MNFTCollectionGraphQLType, description='Данные о коллекции')
+    isCreated = graphene.Boolean(description='Равен истина если коллекция была создана, иначе ложь')
+
+    @classmethod
+    def mutate(cls, root, info, mnftCollection): 
+        mnftCollectionInstance = User.objects.create(**mnftCollection)
+        mnftCollectionInstance.save()
+        return CreateMNFTCollection(MNFTCollection=mnftCollectionInstance, isCreated=True)
+
+
+class CreateOrUpdateMNFTCollection(graphene.Mutation):
+    class Arguments:
+        mnftCollection = MNFTCollectionInput(required=True)
+    class Meta:
+        description = 'Обновляет данные о коллекции, если ее нет то создает'
+    
+    mnftCollection = graphene.Field(MNFTCollectionGraphQLType, description='Данные о коллекции')
+    isCreated = graphene.Boolean(description='Равен истина если коллекция была создана, иначе ложь')
+
+    @classmethod
+    def mutate(cls, root, info, mnftCollection):
+        (mnftCollectionInstance, isCreated) = MNFTCollection.objects.update_or_create(defaults=mnftCollection, pk=mnftCollection.address)
+        return CreateOrUpdateMNFTCollection(user=mnftCollectionInstance, isCreated=isCreated)
+
+
+class DeleteMNFTCollection(graphene.Mutation):
+    class Arguments:
+        address = graphene.String(required=True, description='Адрес')
+    
+    class Meta:
+        description = 'Удаляет коллекцию'
+    
+    isDeleted = graphene.Boolean(description='Результат удаления')
+
+    @classmethod
+    def mutate(cls, root, info, address):
+        isDeleted = (MNFTCollection.objects.get(pk=address).delete()) is not None
+        return DeleteMNFTCollection(isDeleted=isDeleted)
+
+
+class CreateBlockchain(graphene.Mutation):
+    class Arguments:
+        blockchain = BlockchainInput(required=True)
+    
+    class Meta:
+        description = 'Создает блокчейн'
+    
+    blockchain = graphene.Field(BlockchainGraphQLType, description='Данные о блокчейне')
+    isCreated = graphene.Boolean(description='Равен истина если блокчейн был создан, иначе ложь')
+
+    @classmethod
+    def mutate(cls, root, info, blockchain): 
+        blockchainInstance = User.objects.create(**blockchain)
+        blockchainInstance.save()
+        return CreateBlockchain(blockchain=blockchainInstance, isCreated=True)
+
+
+class CreateOrUpdateBlockchain(graphene.Mutation):
+    class Arguments:
+        blockchain = BlockchainInput(required=True)
+    class Meta:
+        description = 'Обновляет данные о блокчейне, если его нет то создает'
+    
+    blockchain = graphene.Field(BlockchainGraphQLType, description='Данные о блокчейне')
+    isCreated = graphene.Boolean(description='Равен истина если блокчейн был создан, иначе ложь')
+
+    @classmethod
+    def mutate(cls, root, info, blockchain):
+        (blockchainInstance, isCreated) = Blockchain.objects.update_or_create(defaults=blockchain, pk=blockchain.id)
+        return CreateOrUpdateMNFTCollection(blockchain=blockchainInstance, isCreated=isCreated)
+
+
+class DeleteBlockchain(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int(required=True, description='ID')
+    
+    class Meta:
+        description = 'Удаляет блокчейн'
+    
+    isDeleted = graphene.Boolean(description='Результат удаления')
+
+    @classmethod
+    def mutate(cls, root, info, address):
+        isDeleted = (Blockchain.objects.get(pk=id).delete()) is not None
+        return DeleteBlockchain(isDeleted=isDeleted)
 
 class Mutation(graphene.ObjectType):
-    createMNFT = createMNFT.Field()
-    updateMNFT = updateMNFT.Field()
-    createUser = createUser.Field()
-    updateUser = updateUser.Field()
-    createOrUpdateUser = createOrUpdateUser.Field()
+    createUser = CreateUser.Field()
+    createOrUpdateUser = CreateOrUpdateUser.Field()
+    deleteUser = DeleteUser.Field()
+    createMNFT = CreateMNFT.Field()
+    createOrUpdateMNFT = CreateOrUpdateMNFT.Field()
+    deleteMNFT = DeleteMNFT.Field()
+    createMNFTCollection = CreateMNFTCollection.Field()
+    createOrUpdateMNFTCollection = CreateOrUpdateMNFTCollection.Field()
+    deleteMNFTCollection = DeleteMNFTCollection.Field()
+    createBlockchain = CreateBlockchain.Field()
+    CreateOrUpdateBlockchain = CreateOrUpdateBlockchain.Field()
+    DeleteBlockchain = DeleteBlockchain.Field()
