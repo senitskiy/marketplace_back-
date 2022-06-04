@@ -15,14 +15,14 @@ cd marketplace_back
 
 Перед установкой необходимо в корне создать .env файл. Пример:
 ```
-DEBUG=True
-DATABASE_URL=sqlite:///./db.sqlite3
-SECRET_KEY=django-insecure-r!i0s78w3q_mao&k^u)w1a2_!%we3g=ied5ked7$(855&hjr(g
-ALLOWED_HOSTS=*
-ADMINSITE=True
-DJANGO_SUPERUSER_USERNAME=admin
-DJANGO_SUPERUSER_EMAIL=admin@mnft.company
-DJANGO_SUPERUSER_PASSWORD=password
+DEBUG=True # вывод подробных ошибок
+DATABASE_URL=sqlite:///./db.sqlite3 # подключение БД
+SECRET_KEY=django-insecure-r!i0s78w3q_mao&k^u)w1a2_!%we3g=ied5ked7$(855&hjr(g # ключ безопасности, можете использовать этот для разработки
+ALLOWED_HOSTS=* # разрешенные хосты для запуска
+ADMINSITE=True # подключать админку
+DJANGO_SUPERUSER_USERNAME=admin # имя админа
+DJANGO_SUPERUSER_EMAIL=admin@mnft.company # почта админа
+DJANGO_SUPERUSER_PASSWORD=password # пароль админа
 ```
 
 ## Запуск
