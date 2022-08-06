@@ -71,7 +71,7 @@ for domain in "${domains[@]}"; do
     certbot certonly --webroot -w /var/www/certbot \
       $staging_arg \
       $email_arg \
-      -d $domain \:q
+      -d $domain \
       --rsa-key-size $rsa_key_size \
       --agree-tos \
       --force-renewal"  certbot
